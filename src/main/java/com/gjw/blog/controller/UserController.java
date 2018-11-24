@@ -1,16 +1,23 @@
 package com.gjw.blog.controller;
 
+import com.gjw.blog.domain.Authority;
 import com.gjw.blog.domain.User;
 import com.gjw.blog.repository.UserRepository;
+import com.gjw.blog.service.AuthorityService;
 import com.gjw.blog.service.UserService;
+import com.gjw.blog.util.ConstraintViolationExceptionHandler;
+import com.gjw.blog.vo.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.validation.ConstraintViolationException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,7 +34,8 @@ public class UserController {
     private UserRepository userRepository;
     @Autowired
     private UserService userService;
-
+    @Autowired
+    private AuthorityService authorityService;
     /**
      * 查询所用用户
      * @param async
@@ -65,44 +73,26 @@ public class UserController {
 		return new ModelAndView("users/add", "userModel", model);
 	}
 
-//	/**
-//	 * 新建用户
-//	 * @param user
-//	 * @param result
-//	 * @param redirect
-//	 * @return
-//	 */
-//	@PostMapping
-//	public ResponseEntity<Response> create(User user, Long authorityId) {
-//		List<Authority> authorities = new ArrayList<>();
-//		authorities.add(authorityService.getAuthorityById(authorityId));
-//		user.setAuthorities(authorities);
-//
-//		if(user.getId() == null) {
-//			user.setEncodePassword(user.getPassword()); // 加密密码
-//		}else {
-//			// 判断密码是否做了变更
-//			User originalUser = userService.getUserById(user.getId());
-//			String rawPassword = originalUser.getPassword();
-//			PasswordEncoder encoder = new BCryptPasswordEncoder();
-//			String encodePasswd = encoder.encode(user.getPassword());
-//			boolean isMatch = encoder.matches(rawPassword, encodePasswd);
-//			if (!isMatch) {
-//				user.setEncodePassword(user.getPassword());
-//			}else {
-//				user.setPassword(user.getPassword());
-//			}
-//		}
-//
-//		try {
-//			userService.saveUser(user);
-//		}  catch (ConstraintViolationException e)  {
-//			return ResponseEntity.ok().body(new Response(false, ConstraintViolationExceptionHandler.getMessage(e)));
-//		}
-//
-//		return ResponseEntity.ok().body(new Response(true, "处理成功", user));
-//	}
+	/**
+	 * 保存或者修改用户
+	 * @param user
+	 * @param authorityId
+	 * @return
+	 */
+	@PostMapping
+	public ResponseEntity<Response> saveOrUpdateUser(User user, Long authorityId) {
+		List<Authority> authorities = new ArrayList<>();
+		authorities.add(authorityService.getAuthorityById(authorityId));
+		user.setAuthorities(authorities);
 
+		try {
+			userService.saveOrUpdateUser(user);
+		}  catch (ConstraintViolationException e)  {
+			return ResponseEntity.ok().body(new Response(false, ConstraintViolationExceptionHandler.getMessage(e)));
+		}
+
+		return ResponseEntity.ok().body(new Response(true, "处理成功", user));
+	}
 
     /**
      * 根据id查询用户
@@ -119,17 +109,17 @@ public class UserController {
     }
 
 
-    /**
-     * 新建用户
-     *
-     * @param user
-     * @return
-     */
-    @PostMapping
-    public ModelAndView create(User user) {
-        userRepository.save(user);
-        return new ModelAndView("redirect:/users");
-    }
+//    /**
+//     * 新建用户
+//     *
+//     * @param user
+//     * @return
+//     */
+//    @PostMapping
+//    public ModelAndView create(User user) {
+//        userRepository.save(user);
+//        return new ModelAndView("redirect:/users");
+//    }
 
     /**
      * 删除用户

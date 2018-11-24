@@ -6,8 +6,8 @@ import org.springframework.data.repository.CrudRepository;
 /**
  * 用户仓库.
  *
- * @since 1.0.0 2017年3月2日
- * @author <a href="https://waylau.com">Way Lau</a> 
+ * @since 1.0.0 2018年11月24日
+ * @author gjw
  */
 public interface UserRepository extends CrudRepository<User, Long>{
 }

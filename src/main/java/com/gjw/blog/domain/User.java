@@ -12,8 +12,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * User 实体
  * 
- * @since 1.0.0 2017年3月5日
- * @author <a href="https://waylau.com">Way Lau</a>
+ * @since 1.0.0 2018年11月24日
+ * @author gjw
  */
 @Entity  // 实体
 @XmlRootElement // MediaType 转为 XML

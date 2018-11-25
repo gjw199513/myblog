@@ -1,9 +1,6 @@
 package com.gjw.blog.service.impl;
 
-import com.gjw.blog.domain.Blog;
-import com.gjw.blog.domain.Comment;
-import com.gjw.blog.domain.User;
-import com.gjw.blog.domain.Vote;
+import com.gjw.blog.domain.*;
 import com.gjw.blog.repository.BlogRepository;
 import com.gjw.blog.service.BlogService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,5 +100,10 @@ public class BlogServiceImpl implements BlogService {
         Blog originalBlog = blogRepository.findOne(blogId);
         originalBlog.removeVote(voteId);
         this.saveBlog(originalBlog);
+    }
+
+    @Override
+    public Page<Blog> listBlogsByCatalog(Catalog catalog, Pageable pageable) {
+        return blogRepository.findByCatalog(catalog, pageable);
     }
 }

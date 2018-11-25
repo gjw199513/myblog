@@ -1,6 +1,7 @@
 package com.gjw.blog.service;
 
 import com.gjw.blog.domain.Blog;
+import com.gjw.blog.domain.Catalog;
 import com.gjw.blog.domain.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -93,4 +94,12 @@ public interface BlogService {
 	 * @return
 	 */
 	void removeVote(Long blogId, Long voteId);
+
+	/**
+	 * 根据分类进行查询
+	 * @param catalog
+	 * @param pageable
+	 * @return
+	 */
+	Page<Blog> listBlogsByCatalog(Catalog catalog, Pageable pageable);
 }

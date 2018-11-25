@@ -26,14 +26,15 @@ import com.github.rjeschke.txtmark.Processor;
 /**
  * Blog 实体
  * 
- * @since 2018年11月25日
+ * @since 1.0.0 2018年11月25日
  * @author gjw199513
  */
 @Entity // 实体
 public class Blog implements Serializable {
-	private static final long serialVersionUID = 1L;
 
-	@Id // 主键
+    private static final long serialVersionUID = 3623727115434852484L;
+
+    @Id // 主键
 	@GeneratedValue(strategy = GenerationType.IDENTITY) // 自增长策略
 	private Long id; // 用户的唯一标识
 	
@@ -88,6 +89,13 @@ public class Blog implements Serializable {
 	@JoinTable(name = "blog_vote", joinColumns = @JoinColumn(name = "blog_id", referencedColumnName = "id"), 
 		inverseJoinColumns = @JoinColumn(name = "vote_id", referencedColumnName = "id"))
 	private List<Vote> votes;
+	
+	@OneToOne(cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
+	@JoinColumn(name="catalog_id")
+	private Catalog catalog;
+
+	@Column(name="tags", length = 100) 
+	private String tags;  // 标签
 	
 	protected Blog() {
 		// TODO Auto-generated constructor stub
@@ -180,7 +188,7 @@ public class Blog implements Serializable {
 	}
 	/**
 	 * 删除评论
-	 * @param commentId
+	 * @param comment
 	 */
 	public void removeComment(Long commentId) {
 		for (int index=0; index < this.comments.size(); index ++ ) {
@@ -236,4 +244,17 @@ public class Blog implements Serializable {
 		this.votes = votes;
 		this.voteSize = this.votes.size();
 	}
+	public String getTags() {
+		return tags;
+	}
+	public void setTags(String tags) {
+		this.tags = tags;
+	}
+	public Catalog getCatalog() {
+		return catalog;
+	}
+	public void setCatalog(Catalog catalog) {
+		this.catalog = catalog;
+	}
+
 }

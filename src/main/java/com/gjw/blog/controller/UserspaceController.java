@@ -1,9 +1,11 @@
 package com.gjw.blog.controller;
 
 import com.gjw.blog.domain.Blog;
+import com.gjw.blog.domain.Catalog;
 import com.gjw.blog.domain.User;
 import com.gjw.blog.domain.Vote;
 import com.gjw.blog.service.BlogService;
+import com.gjw.blog.service.CatalogService;
 import com.gjw.blog.service.UserService;
 import com.gjw.blog.util.ConstraintViolationExceptionHandler;
 import com.gjw.blog.vo.Response;
@@ -46,6 +48,9 @@ public class UserspaceController {
     @Autowired
     BlogService blogService;
 
+    @Autowired
+    private CatalogService catalogService;
+
     @Value("${file.server.url}")
     private String fileServerUrl;
 
@@ -58,7 +63,7 @@ public class UserspaceController {
     public String userSpace(@PathVariable("username") String username, Model model) {
         User user = (User)userDetailsService.loadUserByUsername(username);
         model.addAttribute("user",user);
-        return "redirect/u/"+username+"/blogs";
+        return "redirect:u/"+username+"/blogs";
     }
 
     /**
@@ -153,7 +158,10 @@ public class UserspaceController {
         Page<Blog> page = null;
 
         if (catelogId != null && catelogId > 0) {
-            // todo
+            Catalog catalog = catalogService.getCatalogById(catelogId);
+            Pageable pageable = new PageRequest(pageIndex, pageSize);
+            page = blogService.listBlogsByCatalog(catalog, pageable);
+            order = "";
         } else if (("hot").equals(order)) { // 最热查询
             Sort sort = new Sort(Sort.Direction.DESC, "reading", "comments", "likes");
             Pageable pageable = new PageRequest(pageIndex, pageSize, sort);
@@ -225,6 +233,11 @@ public class UserspaceController {
      */
     @GetMapping("/{username}/blogs/edit")
     public ModelAndView createBlog(@PathVariable("username") String username,Model model) {
+        // 获取用户分类列表
+        User user = (User)userDetailsService.loadUserByUsername(username);
+        List<Catalog> catalogs = catalogService.listCatalogs(user);
+
+        model.addAttribute("catalogs", catalogs);
         model.addAttribute("blog", new Blog(null,null,null));
         // 文件服务器的地址返回给客户端
         model.addAttribute("fileServerUrl",fileServerUrl);
@@ -240,13 +253,32 @@ public class UserspaceController {
      */
     @GetMapping("/{username}/blogs/edit/{id}")
     public ModelAndView editBlog(@PathVariable("username") String username, @PathVariable("id")Long id, Model model){
+        // 获取用户分类列表
+        User user = (User)userDetailsService.loadUserByUsername(username);
+        List<Catalog> catalogs = catalogService.listCatalogs(user);
+
+        model.addAttribute("catalogs", catalogs);
+
         model.addAttribute("blog", blogService.getBlogById(id));
         // 文件服务器的地址返回客户端
         model.addAttribute("fileServerUrl", fileServerUrl);
         return new ModelAndView("/userspace/blogedit","blogModel",model);
     }
 
+    /**
+     * 保存博客
+     * @param username
+     * @param blog
+     * @return
+     */
+    @PostMapping("/{username}/blogs/edit")
+    @PreAuthorize("authentication.name.equals(#username)")
     public ResponseEntity<Response> saveBlog(@PathVariable("username") String username,@RequestBody Blog blog){
+        // 对Catalog进行空处理
+        if(blog.getCatalog().getId() == null){
+            return ResponseEntity.ok().body(new Response(false, "未选择分类"));
+        }
+
         try{
             if(blog.getId()!=null){
                 Blog orignalBlog = blogService.getBlogById(blog.getId());

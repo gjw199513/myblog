@@ -1,13 +1,27 @@
 package com.gjw.blog.domain;
 
-import com.github.rjeschke.txtmark.Processor;
-import org.hibernate.validator.constraints.NotEmpty;
-
-import javax.persistence.*;
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
+
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.Lob;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.validation.constraints.Size;
+
+import org.hibernate.validator.constraints.NotEmpty;
+
+import com.github.rjeschke.txtmark.Processor;
 
 /**
  * Blog 实体
@@ -61,14 +75,19 @@ public class Blog implements Serializable {
 	@Column(name="commentSize")
 	private Integer commentSize = 0;  // 评论量
 
-	@Column(name="likeSize")
-	private Integer likeSize = 0;  // 点赞量
+	@Column(name="voteSize")
+	private Integer voteSize = 0;  // 点赞量
 	
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinTable(name = "blog_comment", joinColumns = @JoinColumn(name = "blog_id", referencedColumnName = "id"), 
 		inverseJoinColumns = @JoinColumn(name = "comment_id", referencedColumnName = "id"))
 	private List<Comment> comments;
+	
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinTable(name = "blog_vote", joinColumns = @JoinColumn(name = "blog_id", referencedColumnName = "id"), 
+		inverseJoinColumns = @JoinColumn(name = "vote_id", referencedColumnName = "id"))
+	private List<Vote> votes;
 	
 	protected Blog() {
 		// TODO Auto-generated constructor stub
@@ -137,11 +156,11 @@ public class Blog implements Serializable {
 	public void setCommentSize(Integer commentSize) {
 		this.commentSize = commentSize;
 	}
-	public Integer getLikeSize() {
-		return likeSize;
+	public Integer getVoteSize() {
+		return voteSize;
 	}
-	public void setLikeSize(Integer likeSize) {
-		this.likeSize = likeSize;
+	public void setVoteSize(Integer voteSize) {
+		this.voteSize = voteSize;
 	}
 	public List<Comment> getComments() {
 		return comments;
@@ -165,7 +184,7 @@ public class Blog implements Serializable {
 	 */
 	public void removeComment(Long commentId) {
 		for (int index=0; index < this.comments.size(); index ++ ) {
-			if (comments.get(index).getId().equals(commentId)) {
+			if (comments.get(index).getId() == commentId) {
 				this.comments.remove(index);
 				break;
 			}
@@ -173,5 +192,48 @@ public class Blog implements Serializable {
 		
 		this.commentSize = this.comments.size();
 	}
-	 
+ 
+	/**
+	 * 点赞
+	 * @param vote
+	 * @return
+	 */
+	public boolean addVote(Vote vote) {
+		boolean isExist = false;
+		// 判断重复
+		for (int index=0; index < this.votes.size(); index ++ ) {
+			if (this.votes.get(index).getUser().getId() == vote.getUser().getId()) {
+				isExist = true;
+				break;
+			}
+		}
+		
+		if (!isExist) {
+			this.votes.add(vote);
+			this.voteSize = this.votes.size();
+		}
+
+		return isExist;
+	}
+	/**
+	 * 取消点赞
+	 * @param voteId
+	 */
+	public void removeVote(Long voteId) {
+		for (int index=0; index < this.votes.size(); index ++ ) {
+			if (this.votes.get(index).getId() == voteId) {
+				this.votes.remove(index);
+				break;
+			}
+		}
+		
+		this.voteSize = this.votes.size();
+	}
+	public List<Vote> getVotes() {
+		return votes;
+	}
+	public void setVotes(List<Vote> votes) {
+		this.votes = votes;
+		this.voteSize = this.votes.size();
+	}
 }

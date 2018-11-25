@@ -3,6 +3,7 @@ package com.gjw.blog.service.impl;
 import com.gjw.blog.domain.Blog;
 import com.gjw.blog.domain.Comment;
 import com.gjw.blog.domain.User;
+import com.gjw.blog.domain.Vote;
 import com.gjw.blog.repository.BlogRepository;
 import com.gjw.blog.service.BlogService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,6 +83,25 @@ public class BlogServiceImpl implements BlogService {
     public void removeComment(Long blogId, Long commentId) {
         Blog originalBlog = blogRepository.findOne(blogId);
         originalBlog.removeComment(commentId);
+        this.saveBlog(originalBlog);
+    }
+
+    @Override
+    public Blog createVote(Long blogId) {
+        Blog originalBlog = blogRepository.findOne(blogId);
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Vote vote = new Vote(user);
+        boolean isExist = originalBlog.addVote(vote);
+        if(isExist){
+            throw new IllegalArgumentException("该用户已经点过赞了");
+        }
+        return this.saveBlog(originalBlog);
+    }
+
+    @Override
+    public void removeVote(Long blogId, Long voteId) {
+        Blog originalBlog = blogRepository.findOne(blogId);
+        originalBlog.removeVote(voteId);
         this.saveBlog(originalBlog);
     }
 }

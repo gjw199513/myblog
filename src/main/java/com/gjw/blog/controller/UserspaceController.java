@@ -2,6 +2,7 @@ package com.gjw.blog.controller;
 
 import com.gjw.blog.domain.Blog;
 import com.gjw.blog.domain.User;
+import com.gjw.blog.domain.Vote;
 import com.gjw.blog.service.BlogService;
 import com.gjw.blog.service.UserService;
 import com.gjw.blog.util.ConstraintViolationExceptionHandler;
@@ -198,6 +199,19 @@ public class UserspaceController {
 				isBlogOwner = true;
 			}
 		}
+
+		// 判断操作用户的点赞状况
+		List<Vote> votes = blog.getVotes();
+        Vote currentVote = null;
+
+        if(principal != null){
+            for(Vote vote:votes){
+                vote.getUser().getUsername().equals(principal.getUsername());
+                currentVote = vote;
+                break;
+            }
+        }
+        model.addAttribute("currentVote",currentVote);
 
 		model.addAttribute("isBlogOwner", isBlogOwner);
 		model.addAttribute("blogModel",blog);

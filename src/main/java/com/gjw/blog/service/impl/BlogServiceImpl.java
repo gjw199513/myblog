@@ -1,0 +1,69 @@
+package com.gjw.blog.service.impl;
+
+import com.gjw.blog.domain.Blog;
+import com.gjw.blog.domain.User;
+import com.gjw.blog.repository.BlogRepository;
+import com.gjw.blog.service.BlogService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * @author gjw19
+ * @date 2018/11/25
+ */
+@Service
+public class BlogServiceImpl implements BlogService {
+
+    @Autowired
+    private BlogRepository blogRepository;
+
+    @Transactional
+    @Override
+    public Blog saveBlog(Blog blog) {
+        Blog returnBlog = blogRepository.save(blog);
+        return returnBlog;
+    }
+
+    @Transactional
+    @Override
+    public void removeBlog(Long id) {
+        blogRepository.delete(id);
+    }
+
+//    @Override
+//    public Blog updateBlog(Blog blog) {
+//        blogRepository.save(blog);
+//    }
+
+    @Override
+    public Blog getBlogById(Long id) {
+        return blogRepository.findOne(id);
+    }
+
+    @Override
+    public Page<Blog> listBlogsByTitleVote(User user, String title, Pageable pageable) {
+        // 模糊查询
+        title = "%" + title + "%";
+        String tags=  title;
+        Page<Blog> blogs = blogRepository.findByUserAndTitleLikeOrderByCreateTimeDesc(user,title,pageable);
+        return blogs;
+    }
+
+    @Override
+    public Page<Blog> listBlogsByTitleVoteAndSort(User user, String title, Pageable pageable) {
+        // 模糊查询
+        title = "%" + title + "%";
+        Page<Blog> blogs = blogRepository.findByUserAndTitleLike(user,title,pageable);
+        return blogs;
+    }
+
+    @Override
+    public void readingIncrease(Long id) {
+        Blog blog = blogRepository.findOne(id);
+        blog.setReading(blog.getReading()+1);
+        this.saveBlog(blog);
+    }
+}

@@ -1,8 +1,10 @@
 package com.gjw.blog.service.impl;
 
 import com.gjw.blog.domain.*;
+import com.gjw.blog.domain.es.EsBlog;
 import com.gjw.blog.repository.BlogRepository;
 import com.gjw.blog.service.BlogService;
+import com.gjw.blog.service.EsBlogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,10 +22,27 @@ public class BlogServiceImpl implements BlogService {
     @Autowired
     private BlogRepository blogRepository;
 
+    @Autowired
+    private EsBlogService esBlogService;
+
     @Transactional
     @Override
     public Blog saveBlog(Blog blog) {
-        Blog returnBlog = blogRepository.save(blog);
+        // 初始保存，未加入es
+//        Blog returnBlog = blogRepository.save(blog);
+
+        boolean isNew = (blog.getId()==null);
+        EsBlog esBlog = null;
+        Blog returnBlog= blogRepository.save(blog);
+
+        if(isNew){
+            esBlog = new EsBlog(returnBlog);
+        }else{
+            esBlog = esBlogService.getEsBlogByBlogId(blog.getId());
+            esBlog.update(returnBlog);
+        }
+
+        esBlogService.updateEsBlog(esBlog);
         return returnBlog;
     }
 
@@ -31,6 +50,9 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public void removeBlog(Long id) {
         blogRepository.delete(id);
+        // es的删除
+        EsBlog esBlog = esBlogService.getEsBlogByBlogId(id);
+        esBlogService.removeEsBlog(esBlog.getId());
     }
 
 //    @Override

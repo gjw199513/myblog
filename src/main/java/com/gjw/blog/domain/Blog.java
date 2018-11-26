@@ -188,7 +188,7 @@ public class Blog implements Serializable {
 	}
 	/**
 	 * 删除评论
-	 * @param comment
+	 * @param commentId
 	 */
 	public void removeComment(Long commentId) {
 		for (int index=0; index < this.comments.size(); index ++ ) {
